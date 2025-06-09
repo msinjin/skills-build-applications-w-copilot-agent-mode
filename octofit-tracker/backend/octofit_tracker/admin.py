@@ -1,3 +1,4 @@
 from django.contrib import admin
+from .models import User, Team, Activity, Leaderboard, Workout
 
-# All admin model registrations removed because models are not defined.
+# No admin registrations since models are dummies for import compatibility only.
