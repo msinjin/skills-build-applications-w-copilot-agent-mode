@@ -1,35 +1,33 @@
 from rest_framework import viewsets
-from .models import User, Team, Activity, Leaderboard, Workout
-from .serializers import UserSerializer, TeamSerializer, ActivitySerializer, LeaderboardSerializer, WorkoutSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from pymongo import MongoClient
+from django.conf import settings
+from rest_framework.views import APIView
+import logging
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-class TeamViewSet(viewsets.ModelViewSet):
-    queryset = Team.objects.all()
-    serializer_class = TeamSerializer
-
-class ActivityViewSet(viewsets.ModelViewSet):
-    queryset = Activity.objects.all()
-    serializer_class = ActivitySerializer
-
-class LeaderboardViewSet(viewsets.ModelViewSet):
-    queryset = Leaderboard.objects.all()
-    serializer_class = LeaderboardSerializer
-
-class WorkoutViewSet(viewsets.ModelViewSet):
-    queryset = Workout.objects.all()
-    serializer_class = WorkoutSerializer
+logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 def api_root(request, format=None):
+    # Use the correct Codespace URL for external access
+    base_url = 'https://sturdy-meme-94vx4q5g9ph794w-8000.app.github.dev'
     return Response({
-        'users': '/api/users/',
-        'teams': '/api/teams/',
-        'activity': '/api/activity/',
-        'leaderboard': '/api/leaderboard/',
-        'workouts': '/api/workouts/',
+        'users': f'{base_url}/api/users/',
+        'teams': f'{base_url}/api/teams/',
+        'activity': f'{base_url}/api/activity/',
+        'leaderboard': f'{base_url}/api/leaderboard/',
+        'workouts': f'{base_url}/api/workouts/',
     })
+
+class UserList(APIView):
+    def get(self, request):
+        print('UserList API called')
+        client = MongoClient(settings.DATABASES['default']['CLIENT']['host'], settings.DATABASES['default']['CLIENT']['port'])
+        db = client[settings.DATABASES['default']['NAME']]
+        users = list(db.octofit_tracker_user.find())
+        print(f'Fetched users from MongoDB: {users}')
+        for user in users:
+            user['_id'] = str(user['_id'])
+        print(f'Returning users: {users}')
+        return Response(users)
